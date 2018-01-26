@@ -1,0 +1,61 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Memory.hdl
+
+/**
+ * The complete address space of the Hack computer's memory,
+ * including RAM and memory-mapped I/O. 
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = Memory[address(t)](t)
+ *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load==1, the in value is loaded 
+ * into the memory location specified by address. This value becomes 
+ * available through the out output from the next time step onward.
+ * Address space rules:
+ * Only the upper 16K+8K+1 words of the Memory chip are used. 
+ * Access to address>0x6000 is invalid. Access to any address in 
+ * the range 0x4000-0x5FFF results in accessing the screen memory 
+ * map. Access to address 0x6000 results in accessing the keyboard 
+ * memory map. The behavior in these addresses is described in the 
+ * Screen and Keyboard chip specifications given in the book.
+ */
+
+ /**
+  * Copyright 2016© victor (viztor@outlook.com)
+  * This implementation
+  */
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+    //Output
+    Mux16(a=kbd, b=false, sel=address[12], out=kbd1);
+    Mux16(a=kbd1, b=false, sel=address[11], out=kbd2);
+    Mux16(a=kbd2, b=false, sel=address[10], out=kbd3);
+    Mux16(a=kbd3, b=false, sel=address[9], out=kbd4);
+    Mux16(a=kbd4, b=false, sel=address[8], out=kbd5);
+    Mux16(a=kbd5, b=false, sel=address[7], out=kbd6);
+    Mux16(a=kbd6, b=false, sel=address[6], out=kbd7);
+    Mux16(a=kbd7, b=false, sel=address[5], out=kbd8);
+    Mux16(a=kbd8, b=false, sel=address[4], out=kbd9);
+    Mux16(a=kbd9, b=false, sel=address[3], out=kbd10);
+    Mux16(a=kbd10, b=false, sel=address[2], out=kbd11);
+    Mux16(a=kbd11, b=false, sel=address[1], out=kbd12);
+    Mux16(a=kbd12, b=false, sel=address[0], out=kbdorinvalid);
+
+
+    Mux16(a=screen, b=kbdorinvalid, sel=address[13], out=nonram);
+    Mux16(a=ram, b=nonram, sel=address[14], out=out);
+
+    //Input
+    DMux(in=load, sel=address[14], a=ramload, b=nonramload);
+    Mux(a=nonramload, b=false, sel=address[13], out=screenload);
+
+    //Storage
+    RAM16K(in=in, load=ramload, address=address[0..13], out=ram);
+    Screen(in=in, load=screenload, address=address[0..12], out=screen);
+    Keyboard(out=kbd);
+}
